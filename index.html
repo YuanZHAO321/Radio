@@ -1,0 +1,233 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="spy">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>加密电台</title>
+<meta name="description" content="离线中文电码转换与加解密">
+<meta name="theme-color" content="#0c0e0d">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="加密电台">
+<meta name="format-detection" content="telephone=no">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+<div class="grain" aria-hidden="true"></div>
+
+<header class="top">
+  <div class="brand">
+    <span class="lamp" id="lamp" aria-hidden="true"></span>
+    <div>
+      <h1 data-t="title">暗线 · 加密电台</h1>
+      <p class="sub" data-t="subtitle">CLASSIFIED · 绝密</p>
+    </div>
+  </div>
+  <div class="top-actions">
+    <button class="chip" id="keyChip" data-go="key" type="button">未装密钥</button>
+    <button class="chip theme-btn" id="themeBtn" type="button" aria-label="切换主题">二战</button>
+  </div>
+</header>
+
+<nav class="tabs" role="tablist">
+  <button role="tab" data-view="convert" aria-selected="true"><i>码</i><span>明码</span></button>
+  <button role="tab" data-view="encrypt"><i>密</i><span>加密</span></button>
+  <button role="tab" data-view="decrypt"><i>译</i><span>解密</span></button>
+  <button role="tab" data-view="book"><i>本</i><span>码本</span></button>
+  <button role="tab" data-view="key"><i>钥</i><span>密钥</span></button>
+</nav>
+
+<main>
+  <!-- 明码 -->
+  <section class="view" id="view-convert">
+    <div class="split">
+      <div class="card">
+        <div class="card-h"><h2>输入</h2><span class="hint">汉字或四位电码，自动识别</span></div>
+        <textarea id="cvIn" rows="4" placeholder="例：中文电报  或  0022 2429 7193 1032" autocomplete="off" autocorrect="off" spellcheck="false"></textarea>
+        <div class="row opts">
+          <label class="sw"><input type="checkbox" id="cvTrad"><span>繁体译出</span></label>
+          <label class="sw"><input type="checkbox" id="cvExt" checked><span>数字/字母/标点扩展码</span></label>
+        </div>
+        <div class="row">
+          <button class="btn primary" id="cvGo" type="button">转换</button>
+          <button class="btn" id="cvSwap" type="button">结果回填</button>
+          <button class="btn ghost" id="cvClear" type="button">清空</button>
+        </div>
+      </div>
+      <div class="card paper">
+        <div class="card-h"><h2 id="cvOutTitle">电报纸</h2><span class="hint" id="cvStat"></span></div>
+        <div class="form-head" aria-hidden="true"><span data-t="formHead">电 报 纸</span></div>
+        <div class="grid-out" id="cvGrid"><p class="empty">结果将显示于此</p></div>
+        <pre class="plain-out" id="cvPlain" hidden></pre>
+        <div class="row">
+          <button class="btn" id="cvCopy" type="button">复制</button>
+          <button class="btn" id="cvShare" type="button">分享</button>
+          <button class="btn" id="cvPlay" type="button">▶ 拍发</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 加密 -->
+  <section class="view" id="view-encrypt" hidden>
+    <div class="split">
+      <div class="card">
+        <div class="card-h"><h2>明文</h2><span class="hint" id="enCount">0 字</span></div>
+        <textarea id="enIn" rows="4" placeholder="拟发电文……" autocomplete="off" spellcheck="false"></textarea>
+        <div class="field">
+          <span class="lbl">乱数起用</span>
+          <div class="seg" id="enMode">
+            <button type="button" data-v="next" aria-pressed="true">顺用</button>
+            <button type="button" data-v="random">随机</button>
+            <button type="button" data-v="manual">指定</button>
+          </div>
+          <input id="enPos" class="code-in" inputmode="numeric" maxlength="4" placeholder="PPRC" hidden>
+        </div>
+        <p class="hint" id="enPosHint"></p>
+        <div class="row opts">
+          <label class="sw"><input type="checkbox" id="enBook" checked><span>密本替代</span></label>
+        </div>
+        <div class="row">
+          <button class="btn primary" id="enGo" type="button">加密成报</button>
+          <button class="btn ghost" id="enClear" type="button">清空</button>
+        </div>
+      </div>
+      <div class="card paper">
+        <div class="card-h"><h2>密电</h2><span class="hint" id="enStat"></span></div>
+        <div class="form-head" aria-hidden="true"><span data-t="formHead2">密 电 稿</span></div>
+        <div class="telegram" id="enOut"><p class="empty">加密后的电文组将显示于此</p></div>
+        <div class="stamp" id="enStamp" hidden data-t="stamp">绝密</div>
+        <div class="row">
+          <button class="btn" id="enCopy" type="button">复制</button>
+          <button class="btn" id="enShare" type="button">分享</button>
+          <button class="btn" id="enPlay" type="button">▶ 拍发</button>
+        </div>
+        <details class="trace"><summary>工作底稿</summary><div id="enTrace"></div></details>
+      </div>
+    </div>
+  </section>
+
+  <!-- 解密 -->
+  <section class="view" id="view-decrypt" hidden>
+    <div class="split">
+      <div class="card">
+        <div class="card-h"><h2>来电</h2><span class="hint" id="deCount">0 组</span></div>
+        <textarea id="deIn" rows="4" inputmode="numeric" placeholder="粘贴或抄收的四码电文（首组为指标组，末组为校验组）" autocomplete="off" spellcheck="false"></textarea>
+        <div class="row opts">
+          <label class="sw"><input type="checkbox" id="deBook" checked><span>密本替代</span></label>
+          <label class="sw"><input type="checkbox" id="deTrad"><span>繁体译出</span></label>
+        </div>
+        <div class="row">
+          <button class="btn primary" id="deGo" type="button">译电</button>
+          <button class="btn" id="dePaste" type="button">粘贴</button>
+          <button class="btn ghost" id="deClear" type="button">清空</button>
+        </div>
+      </div>
+      <div class="card paper">
+        <div class="card-h"><h2>译文</h2><span class="hint" id="deStat"></span></div>
+        <div class="form-head" aria-hidden="true"><span data-t="formHead3">译 电 纸</span></div>
+        <div class="verdict" id="deVerdict" hidden></div>
+        <div class="decoded" id="deOut"><p class="empty">译出的明文将显示于此</p></div>
+        <div class="row">
+          <button class="btn" id="deCopy" type="button">复制</button>
+          <button class="btn danger" id="deBurn" type="button">阅后即焚</button>
+        </div>
+        <details class="trace"><summary>工作底稿</summary><div id="deTrace"></div></details>
+      </div>
+    </div>
+  </section>
+
+  <!-- 码本 -->
+  <section class="view" id="view-book" hidden>
+    <div class="card">
+      <div class="card-h"><h2>标准电码本</h2><span class="hint" id="bookStat"></span></div>
+      <div class="row">
+        <input id="bookQ" class="search" placeholder="查字或查码，如 豪 / 6275" autocomplete="off" spellcheck="false">
+        <button class="btn primary" id="bookGo" type="button">查</button>
+      </div>
+      <p class="hint" id="bookRes"></p>
+      <div class="pager">
+        <button class="btn" id="bookPrev" type="button" aria-label="上一页">‹</button>
+        <label>第 <input id="bookPage" inputmode="numeric" maxlength="2" value="00"> 页</label>
+        <button class="btn" id="bookNext" type="button" aria-label="下一页">›</button>
+        <label class="sw"><input type="checkbox" id="bookTrad"><span>台湾码本</span></label>
+      </div>
+      <div class="book-grid" id="bookGrid"></div>
+    </div>
+  </section>
+
+  <!-- 密钥 -->
+  <section class="view" id="view-key" hidden>
+    <div class="split">
+      <div class="card">
+        <div class="card-h"><h2>共同密钥</h2><span class="hint" id="keyFp">未装载</span></div>
+        <p class="hint">收发双方须持有同一密钥，由其生成同一部乱数本（100 页 × 100 组）与保密代码本。密钥请当面交接，切勿经同一信道传递。</p>
+        <div class="row">
+          <input id="keyIn" class="search" type="password" placeholder="输入密钥" autocomplete="off" autocapitalize="off" spellcheck="false">
+          <button class="btn" id="keyShow" type="button" aria-label="显示密钥">显</button>
+        </div>
+        <div class="row opts">
+          <label class="sw"><input type="checkbox" id="keyRemember"><span>在本机记住密钥</span></label>
+        </div>
+        <div class="row">
+          <button class="btn primary" id="keyLoad" type="button">装载</button>
+          <button class="btn" id="keyGen" type="button">随机生成</button>
+          <button class="btn danger" id="keyWipe" type="button">销毁</button>
+        </div>
+        <div class="field">
+          <span class="lbl">本台页段</span>
+          <input id="segFrom" class="code-in sm" inputmode="numeric" maxlength="2" value="00"> —
+          <input id="segTo" class="code-in sm" inputmode="numeric" maxlength="2" value="99">
+        </div>
+        <p class="hint">双向通报时可分页段使用（如甲台 00–49，乙台 50–99），避免两台重用同一乱数。</p>
+        <div class="row">
+          <span class="hint" id="usedInfo"></span>
+          <button class="btn ghost" id="usedReset" type="button">清除用迹</button>
+        </div>
+      </div>
+      <div class="card paper">
+        <div class="card-h"><h2>乱数本</h2>
+          <div class="pager mini">
+            <button class="btn" id="padPrev" type="button" aria-label="上一页">‹</button>
+            <span id="padPageLbl">第00页</span>
+            <button class="btn" id="padNext" type="button" aria-label="下一页">›</button>
+          </div>
+        </div>
+        <div class="pad-grid" id="padGrid"><p class="empty">装载密钥后可查看乱数本</p></div>
+      </div>
+      <div class="card">
+        <div class="card-h"><h2>电键与外观</h2></div>
+        <div class="field"><span class="lbl">主题</span>
+          <div class="seg" id="themeSeg">
+            <button type="button" data-v="spy">谍报</button>
+            <button type="button" data-v="ww2">二战</button>
+          </div>
+        </div>
+        <div class="field"><span class="lbl">拍发速度</span><input type="range" id="wpm" min="8" max="30" value="16"><span id="wpmLbl">16 WPM</span></div>
+        <div class="field"><span class="lbl">音调</span><input type="range" id="tone" min="400" max="1000" step="10" value="700"><span id="toneLbl">700 Hz</span></div>
+      </div>
+      <div class="card about">
+        <div class="card-h"><h2>加密规则</h2></div>
+        <ol class="rules">
+          <li><b>明码</b>：汉字按标准中文电码本译为四码（0001–9798）。数字、字母、标点用本机扩展码 99xx。</li>
+          <li><b>密本</b>：四码经保密代码本替代，同一字不再对应公开电码。</li>
+          <li><b>加乱</b>：与乱数本中的乱数组逐位相加、<em>不进位</em>（如 1032 + 5678 = 6600）。解密时逐位相减、不借位。</li>
+          <li><b>指标</b>：报首第一组为指标组 PPRC，示乱数自第 PP 页 R 行 C 列起用；指标组本身另加指标乱数遮盖。</li>
+          <li><b>校验</b>：报尾一组为全部明码不进位之和，加乱后附发，用以核对抄收与密钥。</li>
+          <li><b>一次一密</b>：每组乱数只用一次。本机记录已用位置，重用时告警。</li>
+        </ol>
+        <p class="hint">乱数由密钥经 PBKDF2-SHA256 / HMAC-SHA256 派生，强度取决于密钥本身，建议使用“随机生成”的 32 位数字密钥。全部运算在本机离线完成。</p>
+        <p class="hint" id="aboutStat"></p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<script type="module" src="js/app.js"></script>
+</body>
+</html>
